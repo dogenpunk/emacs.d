@@ -746,7 +746,7 @@ commands).
 
     (setq erc-save-buffer-on-part t)
     (defadvice save-buffers-kill-emacs (before save-logs (arg) activate)
-      (save-some-buffers t (lambda () (vcccccc   ))))
+      (save-some-buffers t (lambda () (when (eq major-mode 'erc-mode) t))))
 
     (setq erc-truncate-mode t)
 

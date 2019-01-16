@@ -2,7 +2,7 @@
 #+EMAIL: dogenpunk@gmail.com
 #+STARTUP:  odd hidestarts fold
 #+OPTIONS:  skip:nil toc:nil
-#+PROPERTY: header-args :tangle /Users/dogenpunk/.emacs.el
+#+PROPERTY: header-args :tangle /Users/dogenpunk/.emacs.el :comments both
 
 This is my =.emacs.el= file written in =org-mode=.
 

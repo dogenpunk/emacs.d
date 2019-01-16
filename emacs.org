@@ -1267,3 +1267,7 @@ then it takes a second \\[keyboard-quit] to abort the minibuffer."
   (when (file-exists-p custom-file)
     (load custom-file))
 #+end_src
+* File-local Variables
+# Local Variables:
+# eval: (add-hook 'after-save-hook (lambda () (org-babel-tangle)) nil t)
+# End:

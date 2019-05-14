@@ -4,7 +4,8 @@
 #+OPTIONS:  skip:nil toc:nil
 #+PROPERTY: header-args :tangle ~/.emacs.el :comments both
 
-This is my =.emacs.el= file written in =org-mode=.
+This is my =.emacs.el= file written in =org-mode=. There are many like it,
+but this one is mine...
 
 * Emacs start time
 Tracking Emacs' start time is more of a curiosity to me rather than a
@@ -28,8 +29,16 @@ to split it between the start and end of the file.
     (add-hook 'emacs-startup-hook
               (lambda ()
                 (setq gc-cons-threshold old-gc-cons-threshold))))
+
+  (add-hook 'focus-out-hook 'garbage-collect)
 #+end_src
 
+* Custom file
+#+begin_src emacs-lisp
+  (setq custom-file (concat user-emacs-directory "custom.el"))
+  (when (file-exists-p custom-file)
+    (load custom-file))
+#+end_src
 * Package Initialization
 #+begin_src emacs-lisp
   (require 'gnutls)
@@ -151,6 +160,12 @@ to split it between the start and end of the file.
   (display-time-mode t)
   (size-indication-mode t)
 
+  (set-frame-font "Anonymous Pro-10")
+  (setq display-time-default-load-average nil)
+
+  (require-package 'fill-column-indicator)
+  (fci-mode)
+
   ;; Whitespace
   (require-package 'whitespace)
   (setq whitespace-line-column 79)
@@ -189,7 +204,8 @@ to split it between the start and end of the file.
       (require-package 'all-the-icons-ivy)
       (all-the-icons-ivy-setup)))
 
-  (add-hook 'find-file-hook #'hl-line-mode)
+  (global-hl-line-mode)
+
 
   (winner-mode t)
   (require-package 'rainbow-delimiters)
@@ -267,6 +283,13 @@ to split it between the start and end of the file.
   (when (fboundp 'tool-bar-mode) (tool-bar-mode -1))
   (when (fboundp 'scroll-bar-mode) (scroll-bar-mode -1))
   (when (display-graphic-p) (menu-bar-mode -1))
+
+  (defun /ui/add-prog-mode-watchwords ()
+    (font-lock-add-keywords
+     nil
+     '(("\\<\\(FIX\\(ME\\)?\\|TODO\\|HACK\\|REFACTOR\\|NOCOMMIT\\)"
+        1 font-lock-warning-face t))))
+  (add-hook 'prog-mode-hook #'/ui/add-prog-mode-watchwords)
 #+end_src
 
 * Core
@@ -440,6 +463,8 @@ to split it between the start and end of the file.
     :type '(repeat string)
     :group 'dotemacs)
 
+  (setq-default help-window-select t)
+  (setq create-lockfiles nil)
 #+end_src
 
 * Elisp
@@ -522,6 +547,11 @@ I find it's quicker and easier to use regexp-aware searches within a buffer.
 (global-set-key (kbd "C-M-r") 'isearch-backward)
 #+end_src
 
+** Cleanup buffer
+
+#+begin_src emacs-lisp
+  (global-set-key (kbd "C-c n") '/utils/cleanup-buffer)
+#+end_src
 ** Smart open line
 
 #+begin_src emacs-lisp
@@ -564,6 +594,7 @@ Much like =find-things-fast=, this isn't something I've integrated yet.
 #+begin_src emacs-lisp
   (require-package 'keyfreq)
   (keyfreq-mode 1)
+  (setq keyfreq-file (expand-file-name "emacs.keyfreq" user-emacs-directory))
   (keyfreq-autosave-mode 1)
 #+end_src
 
@@ -609,6 +640,13 @@ already narrowed."
 (global-set-key (kbd "C-x n x") 'narrow-or-widen-dwim)
 #+end_src
 
+** Code folding
+
+#+begin_src emacs-lisp
+  (require-package 'origami)
+  (define-key origami-mode-map (kbd "M-m t") 'origami-toggle-node)
+  (define-key origami-mode-map (kbd "M-m a") 'origami-toggle-all-nodes)
+#+end_src
 ** Mode/app specific keybindings
 
 *** Magit
@@ -641,6 +679,71 @@ already narrowed."
 (global-set-key (kbd "C-c f d") 'find-name-dired)
 (global-set-key (kbd "C-c g") 'grep-find)
 #+end_src
+* Smartparens
+#+begin_src emacs-lisp
+  (require-package 'smartparens)
+  (require 'smartparens-config)
+
+  (defun /config/smartparens-enable-hook ()
+    (smartparens-mode)
+    (show-smartparens-mode)
+    (electric-pair-mode -1))
+
+  (add-hook 'emacs-lisp-mode-hook #'/config/smartparens-enable-hook)
+  (add-hook 'lisp-interaction-mode-hook #'/config/smartparens-enable-hook)
+  (add-hook 'clojure-mode-hook #'/config/smartparens-enable-hook)
+  (add-hook 'cider-mode-hook #'/config/smartparens-enable-hook)
+  (add-hook 'cider-repl-mode-hook #'/config/smartparens-enable-hook)
+
+  (electric-pair-mode -1)
+
+  (setq sp-autoinsert-quote-if-followed-by-closing-pair nil)
+  (setq sp-autoinsert-pair t)
+
+  (setq sp-show-pair-delay 0)
+  (setq sp-show-pair-from-inside t)
+
+  (let ((map smartparens-mode-map))
+    ;; Movement and navigation
+    (define-key map (kbd "C-M-f") #'sp-forward-sexp)
+    (define-key map (kbd "C-M-b") #'sp-backward-sexp)
+    (define-key map (kbd "C-M-u") #'sp-backward-up-sexp)
+    (define-key map (kbd "C-M-d") #'sp-down-sexp)
+    (define-key map (kbd "C-M-p") #'sp-backward-down-sexp)
+    (define-key map (kbd "C-M-n") #'sp-up-sexp)
+    ;; Deleting and killing
+    (define-key map (kbd "C-M-k") #'sp-kill-sexp)
+    (define-key map (kbd "C-M-w") #'sp-copy-sexp)
+    ;; Depth changing
+    (define-key map (kbd "M-s") #'sp-splice-sexp)
+    (define-key map (kbd "M-<up>") #'sp-splice-sexp-killing-backward)
+    (define-key map (kbd "M-<down>") #'sp-splice-sexp-killing-forward)
+    (define-key map (kbd "M-r") #'sp-splice-sexp-killing-around)
+    (define-key map (kbd "M-?") #'sp-convolute-sexp)
+    ;; Barfage & Slurpage
+    (define-key map (kbd "C-)")  #'sp-forward-slurp-sexp)
+    (define-key map (kbd "C-<right>") #'sp-forward-slurp-sexp)
+    (define-key map (kbd "C-}")  #'sp-forward-barf-sexp)
+    (define-key map (kbd "C-<left>") #'sp-forward-barf-sexp)
+    (define-key map (kbd "C-(")  #'sp-backward-slurp-sexp)
+    (define-key map (kbd "C-M-<left>") #'sp-backward-slurp-sexp)
+    (define-key map (kbd "C-{")  #'sp-backward-barf-sexp)
+    (define-key map (kbd "C-M-<right>") #'sp-backward-barf-sexp)
+    ;; Miscellaneous commands
+    (define-key map (kbd "M-S") #'sp-split-sexp)
+    (define-key map (kbd "M-J") #'sp-join-sexp)
+    (define-key map (kbd "C-M-t") #'sp-transpose-sexp))
+
+  ;; Some additional bindings for strict mode
+  (let ((map smartparens-strict-mode-map))
+    (define-key map (kbd "M-q") #'sp-indent-defun)
+    (define-key map (kbd "C-j") #'sp-newline))
+
+  (sp-local-pair 'minibuffer-inactive-mode "'" nil :actions nil)
+  (sp-with-modes '(html-mode sgml-mode web-mode)
+    (sp-local-pair "<" ">"))
+#+end_src
+
 * Clojure
 
 I waffle between =cider= and =inf-clojure= mode a lot. =cider= has often
@@ -649,26 +752,68 @@ right (aside from controlling which version of Java is used to run
 commands).
 
 #+begin_src emacs-lisp
-(require-package 'clojure-mode)
+  (require-package 'clojure-mode)
 
-(add-hook 'clojure-mode-hook
-          (lambda ()
-            (require-package 'cider)
-            (cider-mode t)
-            (local-set-key (kbd "RET") 'newline-and-indent)))
-(add-hook 'clojure-mode-hook 'origami-mode)
-(add-hook 'clojure-mode-hook 'aggressive-indent-mode)
-(setq clojure-align-forms-automatically t)
+  (add-hook 'clojure-mode-hook
+            (lambda ()
+              (require-package 'cider)
+              (cider-mode t)
+              (local-set-key (kbd "RET") 'newline-and-indent)))
+  (add-hook 'clojure-mode-hook 'origami-mode)
+  (add-hook 'clojure-mode-hook 'aggressive-indent-mode)
+  (add-hook 'clojure-mode-hook #'smartparens-strict-mode)
+  (setq clojure-align-forms-automatically t)
 
-(after [cider]
-  (add-hook 'cider-mode-hook #'eldoc-mode)
-  (add-hook 'cider-repl-mode-hook #'eldoc-mode)
-  (add-hook 'cider-repl-mode-hook #'company-mode)
-  (add-hook 'cider-repl-mode-hook #'smartparens-mode)
-  (add-hook 'cider-mode-hook #'company-mode)
-  (add-hook 'cider-mode-hook #'smartparens-mode))
+  (after [cider]
+    (add-hook 'cider-mode-hook #'eldoc-mode)
+    (add-hook 'cider-repl-mode-hook #'eldoc-mode)
+    (add-hook 'cider-repl-mode-hook #'company-mode)
+    (add-hook 'cider-mode-hook #'company-mode)
+    (add-hook 'cider-mode-hook #'smartparens-strict-mode))
 #+end_src
+* Ruby
+#+begin_src emacs-lisp
+  (require 'ruby-mode)
 
+  (add-to-list 'auto-mode-alist '("Guardfile$" . ruby-mode))
+  (add-to-list 'auto-mode-alist '("Rakefile\\'" . ruby-mode))
+  (add-to-list 'auto-mode-alist '("Gemfile\\'" . ruby-mode))
+  (add-to-list 'auto-mode-alist '("Vagrantfile\\'" . ruby-mode))
+  (add-to-list 'auto-mode-alist '("Capfile\\'" . ruby-mode))
+  (add-to-list 'auto-mode-alist '("\\.rake\\'" . ruby-mode))
+  (add-to-list 'auto-mode-alist '("\\.rb\\'" . ruby-mode))
+  (add-to-list 'auto-mode-alist '("\\.ru\\'" . ruby-mode))
+
+  (add-hook 'ruby-mode 'superword-mode)
+
+  (define-key ruby-mode-map (kbd "M-<down>") 'ruby-forward-sexp)
+  (define-key ruby-mode-map (kbd "M-<up>") 'ruby-backward-sexp)
+  (define-key ruby-mode-map (kbd "C-c C-e") 'ruby-send-region)
+
+  (require-package 'inf-ruby)
+  (add-hook 'ruby-mode-hook 'inf-ruby-minor-mode)
+
+  (after 'ruby
+    (require-package 'rubocop-mode)
+    (add-hook 'ruby-mode-hook 'rubocop-mode)
+
+    (require-package 'robe)
+    (add-hook 'ruby-mode-hook 'robe-mode)
+
+    (push 'company-robe company-backends))
+#+end_src
+* HTML
+
+I find it depressingly humorous that I'm still authoring HTML by hand
+in a lot of cases. I feel like someone told me this was going to be
+automated at some point. Bleh.
+
+#+begin_src emacs-lisp
+  (require-package 'emmet-mode)
+  (add-hook 'sgml-mode-hook 'emmet-mode)
+  (add-hook 'css-mode-hook 'emmet-mode)
+  (add-hook 'emmet-mode-hook (lambda () (setq emmet-move-cursor-between-quotes t)))
+#+end_src
 * Company
 
 #+begin_src emacs-lisp
@@ -797,64 +942,67 @@ commands).
 
 * Ivy, counsel, & swiper
 #+begin_src emacs-lisp
-(require-package 'ivy)
-(setq ivy-use-virtual-buffers t)
-(setq ivy-virtual-abbreviate 'full)
-(setq ivy-re-builders-alist '((t . ivy--regex-fuzzy)))
-(setq ivy-height 16)
-(setq ivy-display-style 'fancy)
-(setq ivy-count-format "[%d/%d] ")
-(setq ivy-initial-inputs-alist nil)
+  (require-package 'ivy)
+  (setq ivy-use-virtual-buffers t)
+  (setq ivy-virtual-abbreviate 'full)
+  (setq ivy-re-builders-alist '((t . ivy--regex-fuzzy)))
+  (setq ivy-height 16)
+  (setq ivy-display-style 'fancy)
+  (setq ivy-count-format "[%d/%d] ")
+  (setq ivy-initial-inputs-alist nil)
 
-(after 'lv
-  (setq ivy-display-function
-        (defun /ivy/display-function (text)
-          (let ((lv-force-update t))
-            (lv-message
-             (if (string-match "\\`\n" text)
-                 (substring text 1)
-               text))))))
+  (require-package 'lv)
+  (after 'lv
+    (setq ivy-display-function
+          (defun /ivy/display-function (text)
+            (let ((lv-force-update t))
+              (lv-message
+               (if (string-match "\\`\n" text)
+                   (substring text 1)
+                 text))))))
 
-(require-package 'swiper)
-(after 'swiper
-  (defadvice swiper (before dotemacs activate)
-    (setq gc-cons-threshold most-positive-fixnum))
-  (defadvice swiper-all (before dotemacs activate)
-    (setq gc-cons-threshold most-positive-fixnum)))
+  (require-package 'swiper)
+  (after 'swiper
+    (defadvice swiper (before dotemacs activate)
+      (setq gc-cons-threshold most-positive-fixnum))
+    (defadvice swiper-all (before dotemacs activate)
+      (setq gc-cons-threshold most-positive-fixnum)))
 
-(require-package 'counsel)
+  (require-package 'counsel)
 
-(after "projectile-autoloads"
-  (require-package 'counsel-projectile))
+  (global-set-key (kbd "C-x TAB") 'counsel-imenu)
 
-(defmacro /ivy/propertize (prefix face)
-  `(lambda (str)
-     (propertize str 'line-prefix ,prefix 'face ,face)))
+  (after "projectile-autoloads"
+    (require-package 'counsel-projectile))
 
-(defun /ivy/mini ()
-  (interactive)
-  (setq gc-cons-threshold most-positive-fixnum)
-  (let* ((buffers (mapcar #'buffer-name (buffer-list)))
-         (project-files
-          (if (projectile-project-p)
-              (mapcar (/ivy/propertize "[ project ] " 'ivy-virtual)
-                      (projectile-current-project-files))
-            nil))
-         (bufnames (mapcar (/ivy/propertize "[ buffer ] " 'ivy-remote) buffers))
-         (recents (mapcar (/ivy/propertize "[ recent ] " 'ivy-subdir) recentf-list)))
-    (ivy-read "Search: " (append project-files bufnames recents)
-              :action (lambda (f)
-                        (with-ivy-window
-                          (cond ((member f bufnames)
-                                 (switch-to-buffer f))
-                                ((file-exists-p f)
-                                 (find-file f))
-                                (t
-                                 (find-file (concat (projectile-project-root) f)))))))))
+  (defmacro /ivy/propertize (prefix face)
+    `(lambda (str)
+       (propertize str 'line-prefix ,prefix 'face ,face)))
 
-(counsel-mode t)
-(counsel-projectile-mode t)
-(ivy-mode t)
+  (defun /ivy/mini ()
+    (interactive)
+    (setq gc-cons-threshold most-positive-fixnum)
+    (let* ((buffers (mapcar #'buffer-name (buffer-list)))
+           (project-files
+            (if (projectile-project-p)
+                (mapcar (/ivy/propertize "[ project ] " 'ivy-virtual)
+                        (projectile-current-project-files))
+              nil))
+           (bufnames (mapcar (/ivy/propertize "[ buffer ] " 'ivy-remote) buffers))
+           (recents (mapcar (/ivy/propertize "[ recent ] " 'ivy-subdir) recentf-list)))
+      (ivy-read "Search: " (append project-files bufnames recents)
+                :action (lambda (f)
+                          (with-ivy-window
+                            (cond ((member f bufnames)
+                                   (switch-to-buffer f))
+                                  ((file-exists-p f)
+                                   (find-file f))
+                                  (t
+                                   (find-file (concat (projectile-project-root) f)))))))))
+
+  (counsel-mode t)
+  (counsel-projectile-mode t)
+  (ivy-mode t)
 
 #+end_src
 
@@ -866,7 +1014,7 @@ commands).
     (defadvice elisp-slime-nav-find-elisp-thing-at-point (after dotemacs activate)
       (recenter)))
 
-  ;;(require-package 'paredit)
+  ;; (require-package 'paredit)
 
   (defun /lisp/major-mode-hook ()
     (progn
@@ -877,7 +1025,6 @@ commands).
   (add-hook 'emacs-lisp-mode-hook #'/lisp/major-mode-hook)
   (add-hook 'lisp-interaction-mode-hook #'/lisp/major-mode-hook)
   (add-hook 'ielm-mode-hook #'/lisp/major-mode-hook)
-
 #+end_src
 
 * Misc
@@ -911,31 +1058,34 @@ commands).
 
 * Navigation
 #+begin_src emacs-lisp
-(require-package 'avy)
+  (require-package 'avy)
 
-(require-package 'ace-window)
-(global-set-key (kbd "C-x o") 'ace-window)
-(setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l ?o))
-(setq aw-background nil)
-(custom-set-faces
- '(aw-leading-char-face
-   ((t (:inherit ace-jump-face-foreground :height 3.0)))))
+  (require-package 'ace-window)
+  (global-set-key (kbd "C-x o") 'ace-window)
+  (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l ?o))
+  (setq aw-background nil)
+  (custom-set-faces
+   '(aw-leading-char-face
+     ((t (:inherit ace-jump-face-foreground :height 3.0)))))
 
-(setq locate-command "mdfind") ;; MacOS Spotlight
-(global-set-key (kbd "C-c f l") 'locate)
+  (setq locate-command "mdfind") ;; MacOS Spotlight
+  (global-set-key (kbd "C-c f l") 'locate)
 
-(defun locate-org-files (search-string)
-  "Adjust `locate-with-filter' to only search `org-mode' files
-  with SEARCH-STRING."
-  (interactive "sSearch string: ")
-  (locate-with-filter search-string ".org$"))
-(global-set-key (kbd "C-c f o") 'locate-org-files)
+  (defun locate-org-files (search-string)
+    "Adjust `locate-with-filter' to only search `org-mode' files
+    with SEARCH-STRING."
+    (interactive "sSearch string: ")
+    (locate-with-filter search-string ".org$"))
+  (global-set-key (kbd "C-c f o") 'locate-org-files)
 
-(require-package 'visual-regexp)
-(require-package 'visual-regexp-steroids)
-(global-set-key (kbd "C-c r") 'vr/replace)
-(global-set-key (kbd "C-c q") 'vr/query-replace)
+  (require-package 'visual-regexp)
+  (require-package 'visual-regexp-steroids)
+  (global-set-key (kbd "C-c r") 'vr/replace)
+  (global-set-key (kbd "C-c q") 'vr/query-replace)
 
+  (global-subword-mode 1)
+  (global-set-key (kbd "M-]") 'next-buffer)
+  (global-set-key (kbd "M-[") 'previous-buffer)
 #+end_src
 
 * Org mode
@@ -944,19 +1094,42 @@ commands).
     (unless (file-exists-p org-directory)
       (make-directory org-directory))
 
+    (setq org-catch-invisible-edits 'show-and-error)
+    (setq org-cycle-separator-lines 0)
+
     (setq org-default-notes-file (expand-file-name (concat org-directory "/inbox.org")))
+    (setq org-todo-keywords
+          '((sequence "TODO" "INPROGRESS" "BLOCKED" "REVIEW" "|" "DONE" "ARCHIVED")))
+    (setq org-todo-keyword-faces
+          '(("TODO" . org-warning)
+            ("INPROGRESS" . "yellow")
+            ("BLOCKED" . "red")
+            ("REVIEW" . "orange")
+            ("DONE" . "green")
+            ("ARCHIVED" . "blue")))
     (setq org-log-done t)
     (setq org-log-into-drawer t)
 
     (setq org-use-fast-todo-selection t)
     (setq org-treat-S-cursor-todo-selection-as-state-change nil)
 
+    (setq org-capture-templates
+          (quote (("t" "todo" entry (file "~/org/inbox.org")
+                   "* TODO %?\n%U\n%a\n" :clock-in t :clock-resume t)
+                  ("j" "journal" entry (file+datetree "~/org/journal.org")
+                   "**** %U%?%a \n" :tree-type week))))
+
+    (setq org-refile-targets '((nil :maxlevel . 9)
+                               (org-agenda-files :maxlevel . 9)))
+    (setq org-refile-use-outline-path 'file)
+    (setq org-outline-path-complete-in-steps nil)
+
     ;; Babel
     (setq org-babel-load-languages
           '((sh . t)
             (emacs-lisp . t)
             (ditaa . t)
-            (planduml . t)
+            (plantuml . t)
             (sql . t)
             (clojure . t)))
     (setq org-babel-default-header-args
@@ -1010,6 +1183,8 @@ commands).
     (require-package 'org-bullets)
     (add-hook 'org-mode-hook #'org-bullets-mode)
 
+    (require-package 'org-trello)
+
     ;; UI
     (setq org-startup-indented t)
     (setq org-src-fontify-natively t)
@@ -1045,6 +1220,59 @@ commands).
   (setq org-refile-use-outline-path 'file)
   (setq org-outline-path-complete-in-steps nil)
 
+  ;; This section is ENTIRELY cribbed from https://blog.aaronbieber.com/2016/09/24/an-agenda-for-life-with-org-mode.html
+  (defun /agenda/org-skip-subtree-if-priority (priority)
+    "Skip an agenda subtree if it has a priority of PRIORITY.
+
+    PRIORITY may be one of the characters ?A, ?B, or ?C."
+    (let ((subtree-end (save-excursion (org-end-of-subtree t)))
+          (pri-value (* 1000 (- org-lowest-priority priority)))
+          (pri-current (org-get-priority (thing-at-point 'line t))))
+      (if (= pri-value pri-current)
+          subtree-end
+        nil)))
+
+  (defun /agenda/org-skip-subtree-if-habit ()
+    "Skip an agenda entry if it has a STYLE property equal to \"habit\"."
+    (let ((subtree-end (save-excursion (org-end-of-subtree t))))
+      (if (string= (org-entry-get nil "STYLE") "habit")
+          subtree-end
+        nil)))
+
+  (defun /agenda/is-project-p ()
+    "Any task with a todo keyword subtask."
+    (save-restriction
+      (widen)
+      (let ((has-subtask)
+            (subtree-end (save-excursion (org-end-of-subtree t)))
+            (is-a-task (member (nth 2 (org-heading-components)) org-todo-keywords-1)))
+        (save-excursion
+          (forward-line 1)
+          (while (and (not has-subtask)
+                      (< (point) subtree-end)
+                      (re-search-forward "^\*+ " subtree-end t))
+            (when (member (org-get-todo-state) org-todo-keywords-1)
+              (setq has-subtask t))))
+        (and is-a-task has-subtask))))
+
+  (defun /agenda/skip-non-stuck-projects ()
+    "Skip trees that are not stuck projects"
+    (save-restriction
+      (widen)
+      (let ((next-headline (save-excursion (or (outline-next-heading) (point-max)))))
+        (if (/agenda/is-project-p)
+            (let* ((subtree-end (save-excursion (org-end-of-subtree t)))
+                   (has-next))
+              (save-excursion
+                (forward-line 1)
+                (while (and (not has-next) (< (point) subtree-end) (re-search-forward "^\\*+ NEXT " subtree-end t))
+                  (unless (member "WAITING" (org-get-tags-at))
+                    (setq has-next t))))
+              (if has-next
+                  next-headline
+                nil))
+          next-headline))))
+
   (setq org-agenda-custom-commands
         (quote (("c" todo "DONE|CANCELLED|ARCHIVED" nil)
                 ("b" todo "BLOCKED" nil)
@@ -1061,99 +1289,156 @@ commands).
                             (org-agenda-overriding-header
                              "Low priority tasks")))))
                 ("W" agenda "" ((org-agenda-ndays 21)))
+("d" "Daily agenda and all TODOs"
+           ((tags "PRIORITY=\"A\""
+                  ((org-agenda-skip-function '(org-agenda-skip-entry-if 'todo 'done))
+                   (org-agenda-overriding-header "High-priority unfinished tasks:")))
+            (agenda "" ((org-agenda-ndays 1)))
+            (alltodo ""
+                     ((org-agenda-skip-function '(or (/agenda/org-skip-subtree-if-habit)
+                                                     (/agenda/org-skip-subtree-if-priority ?A)
+                                                     (org-agenda-skip-if nil '(scheduled deadline))))
+                      (org-agenda-overriding-header "ALL normal priority tasks:"))))
+           ((org-agenda-compact-blocks t)))
+
+("h" "Habits" tags-todo "STYLE=\"habit\""
+           ((org-agenda-overriding-header "Habits")
+            (org-agenda-sorting-strategy
+             '(todo-state-down effort-up category-keep))))
+
+(" " "Agenda"
+           ((agenda "" nil)
+            (tags "REFILE"
+                  ((org-agenda-overriding-header "Tasks to Refile")
+                   (org-tags-match-list-sublevels nil)))
+
+            (tags-todo "-CANCELLED/!"
+                       ((org-agenda-overriding-header "Stuck Projects")
+                        (org-agenda-skip-function '/agenda/skip-non-stuck-projects)
+                        (org-agenda-sorting-strategy '(category-keep))))
+            ))
                 )))
 
 #+end_src
+*** Blogging
+
+#+BEGIN_SRC emacs-lisp
+  (require-package 'org2blog)
+  (require 'auth-source)
+
+  (let* ((credentials (auth-source-user-and-password "my-blog"))
+         (username (nth 0 credentials))
+         (password (nth 1 credentials))
+         (config `(("my-blog"
+                    :url "http://box2010.temp.domains/~atthewmn/xmlrpc.php"
+                    :username ,username
+                    :password ,password))))
+
+    (setq org2blog/wp-blog-alist config))
+#+END_SRC
+
+
+* MacOS specifics
+
+* LaTeX
+
+Cribbed from
+http://www.wangzerui.com/2017/02/20/setting-up-a-nice-environment-for-latex-on-macos/
+
+#+begin_src emacs-lisp
+  (require-package 'auctex-latexmk)
+
+  (setq TeX-PDF-mode t)
+
+  (add-hook 'LaTeX-mode-hook
+            (lambda ()
+              (push
+               '("latexmk" "latexmk -pdf %s" TeX-run-TeX nil t
+                 :help "Run latexmk on file")
+               TeX-command-list)))
+  (add-hook 'TeX-mode-hook (lambda () (setq TeX-command-default "latexmk")))
+
+  (setq TeX-view-program-selection '((output-pdf "PDF Viewer")))
+  (setq TeX-view-program-list
+        '(("PDF Viewer" "/Applications/Skim.app/Contents/SharedSupport/displayline -b -g %n %o %b")))
+
+  (custom-set-variables
+   '(TeX-source-correlate-method 'synctex)
+   '(TeX-source-correlate-mode t)
+   '(TeX-source-correlate-start-server t))
+#+end_src
 * MacOS specifics
 #+begin_src emacs-lisp
-(defcustom dotemacs-os/additional-exec-paths
-  nil
-  "Additional paths to be added to `exec-path'."
-  :type '(repeat (string))
-  :group 'dotemacs)
+  (defcustom dotemacs-os/additional-exec-paths
+    nil
+    "Additional paths to be added to `exec-path'."
+    :type '(repeat (string))
+    :group 'dotemacs)
 
-(require-package 'exec-path-from-shell)
-(exec-path-from-shell-initialize)
+  (require-package 'exec-path-from-shell)
+  (exec-path-from-shell-initialize)
 
-(defun /os/addpath (patth)
-  (let* ((directory (expand-file-name path))
-	 (env-value (concat directory path-separator (getenv "PATH"))))
-    (when directory
-      (setenv "PATH" env-value)
-      (setq eshell-path-env env-value)
-      (add-to-list 'exec-path directory))))
+  (defun /os/addpath (patth)
+    (let* ((directory (expand-file-name path))
+           (env-value (concat directory path-separator (getenv "PATH"))))
+      (when directory
+        (setenv "PATH" env-value)
+        (setq eshell-path-env env-value)
+        (add-to-list 'exec-path directory))))
 
-(dolist (path dotemacs-os/additional-exec-paths)
-  (/os/addpath path))
+  (dolist (path dotemacs-os/additional-exec-paths)
+    (/os/addpath path))
 
-(when (eq system-type 'darwin)
-  (require-package 'osx-trash)
-  (osx-trash-setup)
+  (when (eq system-type 'darwin)
+    (require-package 'osx-trash)
+    (osx-trash-setup)
 
-  (require-package 'reveal-in-osx-finder))
+    (require-package 'reveal-in-osx-finder))
 
-(defun /os/reveal-in-os ()
-  (interactive)
-  (call-interactively #'reveal-in-osx-finder))
+  (defun /os/reveal-in-os ()
+    (interactive)
+    (call-interactively #'reveal-in-osx-finder))
 #+end_src
 
 * Projectile
 #+begin_src emacs-lisp
-(require-package 'projectile)
+  (require-package 'projectile)
 
-(setq projectile-cache-file (concat user-emacs-directory "projectile.cache"))
-(setq projectile-known-projects-file
-      (concat user-emacs-directory "projectile-bookmarks.eld"))
-(setq projectile-indexing-method 'alien)
-(setq projectile-enable-caching t)
+  (setq projectile-cache-file (concat user-emacs-directory "projectile.cache"))
+  (setq projectile-known-projects-file
+        (concat user-emacs-directory "projectile-bookmarks.eld"))
+  (setq projectile-indexing-method 'alien)
+  (setq projectile-enable-caching t)
 
-;;(setq projectile-completion-system 'ido)
+  (setq projectile-completion-system 'ivy)
 
+  (setq projectile-switch-project-action #'projectile-dired)
+  (setq projectile-create-missing-test-files t)
 
-(setq projectile-switch-project-action 'projectile-commander)
-(setq projectile-create-missing-test-files t)
+  (projectile-mode +1)
+  (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
 
-(projectile-mode +1)
-(define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
+  (dolist (dir dotemacs-globally-ignored-directories)
+    (add-to-list 'projectile-globally-ignored-directories dir))
 
-(dolist (dir dotemacs-globally-ignored-directories)
-  (add-to-list 'projectile-globally-ignored-directories dir))
+  (dolist (file '(".DS_Store"))
+    (add-to-list 'projectile-globally-ignored-files file))
 
-(dolist (file '(".DS_Store"))
-  (add-to-list 'projectile-globally-ignored-files file))
-
-(cond
- ((executable-find "ag")
-  (setq projectile-generic-command
-        (concat "ag -0 -l --nocolor"
-                (mapconcat #'identity (cons "" projectile-globally-ignored-directories) " --ignore-dir="))))
- ((executable-find "ack")
-  (setq projectile-generic-command
-        (concat "ack -f --print0"
-                (mapconcat #'identity (cons "" projectile-globally-ignored-directories) " --ignore-dir=")))))
-#+end_src
-
-* Smartparens
-#+begin_src emacs-lisp
-  (require-package 'smartparens)
-  (require 'smartparens-config)
-
-  (electric-pair-mode -1)
-
-  (setq sp-autoinsert-quote-if-followed-by-closing-pair nil)
-  (setq sp-autoinsert-pair t)
-
-  (setq sp-show-pair-delay 0)
-  (setq sp-show-pair-from-inside t)
-
-  ;;(show-smartparens-global-mode t)
-  ;;(smartparens-global-mode t)
-
-  (sp-use-smartparens-bindings)
-
+  (cond
+   ((executable-find "ag")
+    (setq projectile-generic-command
+          (concat "ag -0 -l --nocolor"
+                  (mapconcat #'identity (cons "" projectile-globally-ignored-directories) " --ignore-dir="))))
+   ((executable-find "ack")
+    (setq projectile-generic-command
+          (concat "ack -f --print0"
+                  (mapconcat #'identity (cons "" projectile-globally-ignored-directories) " --ignore-dir=")))))
 #+end_src
 
 * Flyspell
+
+This needs some more massaging I think.
+
 #+begin_src emacs-lisp
 (when (or (executable-find "aspell")
           (executable-find "ispell")
@@ -1166,94 +1451,142 @@ commands).
 
 #+end_src
 
+* Prodigy (Manage external services)
+
+This isn't working currently.
+
+#+begin_src emacs-lisp
+  (require-package 'prodigy)
+
+  (defface prodigy-dull-face
+    '((((class color)) :foreground "#999999"))
+    "Gray color indicating waiting."
+    :group 'prodigy)
+
+  (prodigy-define-status :id 'running 'prodigy-dull-face)
+  (prodigy-define-status :id 'exception :face 'prodigy-red-face)
+
+  (prodigy-define-tag
+    :name 'ring
+    :on-output (lambda (service output)
+                 (when (s-matches? "Started server on port" output)
+                   (prodigy-set-status service 'ready))
+                 (when (s-matches? "Exception" output)
+                   (prodigy-set-status service 'exception))))
+
+  (prodigy-define-service
+    :name "vms-composer-datomic-socks"
+    :cwd "~/Workspace/consulting/village-music-school/systems/composer/"
+    :command "bash"
+    :args '("~/Downloads/datomic-socks-proxy" "-r" "us-east-1" "vms-scheduler"))
+
+  (prodigy-define-service
+    :name "vms-composer-repl"
+    :cwd "~/Workspace/consulting/village-music-school/systems/composer/"
+    :command "clojure"
+    :args '("-A:test:dev:deps" "-Sdeps" "'{:deps {nrepl {:mvn/version \"0.5.0\"} cider/cider-nrepl {:mvn/version \"0.19.0\"}}}'" "-m" "nrepl.cmdline" "--middleware" "[cider.nrepl/cider-middleware]"))
+#+end_src
 * Utility Functions
 #+begin_src emacs-lisp
-(defun /utils/window-killer ()
-  "Closes the window, and deletes the buffer if it's the last window open."
-  (interactive)
-  (if (> buffer-display-count 1)
-      (if (= (length (window-list)) 1)
-          (kill-buffer)
-        (delete-window))
-    (kill-buffer-and-window)))
+  (defun /utils/window-killer ()
+    "Closes the window, and deletes the buffer if it's the last window open."
+    (interactive)
+    (if (> buffer-display-count 1)
+        (if (= (length (window-list)) 1)
+            (kill-buffer)
+          (delete-window))
+      (kill-buffer-and-window)))
 
-(defun /utils/minibuffer-keyboard-quit ()
-  "Abort recursive edit.
-In Delete Selection mode, if the mark is actie, just deactivate it;
-then it takes a second \\[keyboard-quit] to abort the minibuffer."
-  (interactive)
-  (if (and delete-selection-mode transient-mark-mode mark-active)
-      (setq deactivate-mark t)
-    (when (get-buffer "*Completions*") (delete-windows-on "*Completions*"))
-    (abort-recursive-edit)))
+  (defun /utils/minibuffer-keyboard-quit ()
+    "Abort recursive edit.
+  In Delete Selection mode, if the mark is actie, just deactivate it;
+  then it takes a second \\[keyboard-quit] to abort the minibuffer."
+    (interactive)
+    (if (and delete-selection-mode transient-mark-mode mark-active)
+        (setq deactivate-mark t)
+      (when (get-buffer "*Completions*") (delete-windows-on "*Completions*"))
+      (abort-recursive-edit)))
 
-(defun /utils/google ()
-  "Google the selected region if any, display a query prompt otherwise."
-  (interactive)
-  (browse-url
-   (concat
-    "https://www.google.com/search?ie=utf-8&oe=utf-8&q="
-    (url-hexify-string (if mark-active
-                           (buffer-substring (region-beginning) (region-end))
-                         (read-string "Search Google: "))))))
+  (defun /utils/google ()
+    "Google the selected region if any, display a query prompt otherwise."
+    (interactive)
+    (browse-url
+     (concat
+      "https://www.google.com/search?ie=utf-8&oe=utf-8&q="
+      (url-hexify-string (if mark-active
+                             (buffer-substring (region-beginning) (region-end))
+                           (read-string "Search Google: "))))))
 
-(defun /utils/eval-and-replace ()
-  "Replace the preceding sexp with its value."
-  (interactive)
-  (let ((value (eval (preceding-sexp))))
-    (backward-kill-sexp)
-    (insert (format "%s" value))))
+  (defun /utils/eval-and-replace ()
+    "Replace the preceding sexp with its value."
+    (interactive)
+    (let ((value (eval (preceding-sexp))))
+      (backward-kill-sexp)
+      (insert (format "%s" value))))
 
-(defun /utils/rename-current-buffer-file ()
-  "Renames current buffer and file it is visiting."
-  (interactive)
-  (let ((filename (buffer-file-name)))
-    (if (not (and filename (file-exists-p filename)))
-        (message "Buffer is not visiting a file!")
-      (let ((new-name (read-file-name "New name: " filename)))
-        (cond
-         ((vc-backend filename) (vc-rename-file filename new-name))
-         (t
-          (rename-file filename new-name t)
-          (set-visited-file-name new-name t t)))))))
+  (defun /utils/rename-current-buffer-file ()
+    "Renames current buffer and file it is visiting."
+    (interactive)
+    (let ((filename (buffer-file-name)))
+      (if (not (and filename (file-exists-p filename)))
+          (message "Buffer is not visiting a file!")
+        (let ((new-name (read-file-name "New name: " filename)))
+          (cond
+           ((vc-backend filename) (vc-rename-file filename new-name))
+           (t
+            (rename-file filename new-name t)
+            (set-visited-file-name new-name t t)))))))
 
-(defun /utils/delete-current-buffer-file ()
-  "Kill the current buffer and deletes the file it is visiting."
-  (interactive)
-  (let ((filename (buffer-file-name)))
-    (when filename
-      (if (vc-backend filename)
-          (vc-delete-file filename)
-        (when (y-or-n-p (format "Are you sure you want to delete %s? " filename))
-          (delete-file filename)
-          (message "Deleted file %s" filename)
-          (kill-buffer))))))
+  (defun /utils/delete-current-buffer-file ()
+    "Kill the current buffer and deletes the file it is visiting."
+    (interactive)
+    (let ((filename (buffer-file-name)))
+      (when filename
+        (if (vc-backend filename)
+            (vc-delete-file filename)
+          (when (y-or-n-p (format "Are you sure you want to delete %s? " filename))
+            (delete-file filename)
+            (message "Deleted file %s" filename)
+            (kill-buffer))))))
 
-(defun /utils/goto-scratch-buffer ()
-  "Create a new scratch buffer."
-  (interactive)
-  (switch-to-buffer (get-buffer-create "*scratch*")))
+  (defun /utils/goto-scratch-buffer ()
+    "Create a new scratch buffer."
+    (interactive)
+    (switch-to-buffer (get-buffer-create "*scratch*")))
 
-(defun /utils/insert-last-kbd-macro ()
-  (interactive)
-  (name-last-kbd-macro 'my-last-macro)
-  (insert-kbd-macro 'my-last-macro))
+  (defun /utils/insert-last-kbd-macro ()
+    (interactive)
+    (name-last-kbd-macro 'my-last-macro)
+    (insert-kbd-macro 'my-last-macro))
 
-(defun /utils/set-buffer-to-unix-format ()
-  "Converts the current buffer to UNIX file format."
-  (interactive)
-  (set-buffer-file-coding-system 'undecided-unix nil))
+  (defun /utils/set-buffer-to-unix-format ()
+    "Converts the current buffer to UNIX file format."
+    (interactive)
+    (set-buffer-file-coding-system 'undecided-unix nil))
 
-(defun /utils/set-buffer-to-dos-format ()
-  "Converts the current buffer to DOS file format."
-  (interactive)
-  (set-buffer-file-coding-system 'undecided-dos nil))
+  (defun /utils/set-buffer-to-dos-format ()
+    "Converts the current buffer to DOS file format."
+    (interactive)
+    (set-buffer-file-coding-system 'undecided-dos nil))
 
-(defun /utils/find-file-as-root (file)
-  "Edits a file as root."
-  (interactive "f")
-  (find-file-other-window (concat "/sudo:root@localhost:" file)))
+  (defun /utils/find-file-as-root (file)
+    "Edits a file as root."
+    (interactive "f")
+    (find-file-other-window (concat "/sudo:root@localhost:" file)))
 
+  (defun /utils/untabify-buffer ()
+    (interactive)
+    (untabify (point-min) (point-max)))
+
+  (defun /utils/indent-buffer ()
+    (interactive)
+    (indent-region (point-min) (point-max)))
+
+  (defun /utils/cleanup-buffer ()
+    (interactive)
+    (/utils/untabify-buffer)
+    (delete-trailing-whitespace)
+    (/utils/indent-buffer))
 #+end_src
 
 * VCS
@@ -1306,11 +1639,56 @@ then it takes a second \\[keyboard-quit] to abort the minibuffer."
 (/boot/lazy-major-mode "^\\.gitattributes$" gitattributes-mode)
 
 #+end_src
-* Custom file
+
+* Eshell
+
+It is a long standing goal of mine to switch to eshell entirely.
+Unfortunately, =bash= is required for some critical things like the
+SOCKS proxy script for connecting to datomic cloud. Maybe one day
+soon, though.
+
 #+begin_src emacs-lisp
-  (setq custom-file (concat user-emacs-directory "custom.el"))
-  (when (file-exists-p custom-file)
-    (load custom-file))
+  (setq eshell-history-size nil)
+
+  (defun if-string-match-then-result (to-match pairs)
+    "Takes a string to match and a list of pairs, the first element
+  of the pairs is a regexp to test against the string, the second of
+  which is a return value if it matches."
+    (catch 'break
+      (dolist (val pairs)
+        (if (string-match-p (car val) to-match)
+            (progn
+              (throw 'break (cadr val)))))
+      (throw 'break nil)))
+
+  (defun eshell/extract (file)
+    (eshell-command-result (concat (if-string-match-then-result
+                                    file
+                                    '((".*\.tar.bz2" "tar xjf")
+                                      (".*\.tar.gz" "tar xzf")
+                                      (".*\.bz2" "bunzip2")
+                                      (".*\.rar" "unrar x")
+                                      (".*\.gz" "gunzip")
+                                      (".*\.tar" "tar xf")
+                                      (".*\.tbz2" "tar xjf")
+                                      (".*\.tgz" "tar xzf")
+                                      (".*\.zip" "unzip")
+                                      (".*\.jar" "unzip")
+                                      (".*\.Z" "uncompress")
+                                      (".*" "echo 'Could not extract the requested file:'")))
+                                   " " file)))
+
+  (defun eshell/clear ()
+    "Clear the eshell buffer."
+    (interactive)
+    (let ((inhibit-read-only t))
+      (erase-buffer)))
+
+  (defun eshell/take (dir)
+    "Make a directory and cd into it."
+    (interactive)
+    (eshell/mkdir "-p" dir)
+    (eshell/cd dir))
 #+end_src
 * File-local Variables
 # Local Variables:

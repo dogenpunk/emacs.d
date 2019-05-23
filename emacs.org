@@ -570,9 +570,10 @@ Much like =find-things-fast=, this isn't something I've integrated yet.
 ** Global org keybindings
 
 #+begin_src emacs-lisp
-(global-set-key (kbd "C-c a") 'org-agenda)
-(global-set-key (kbd "C-c l") 'org-store-link)
-(global-set-key (kbd "C-c b") 'org-switchb)
+  (global-set-key (kbd "C-c a") 'org-agenda)
+  (global-set-key (kbd "C-c l") 'org-store-link)
+  (global-set-key (kbd "C-c b") 'org-switchb)
+  (global-set-key (kbd "C-c c") 'org-capture)
 #+end_src
 
 ** Quickly switch to other window
@@ -946,14 +947,8 @@ commands).
     (setq org-log-done t)
     (setq org-log-into-drawer t)
 
-    (setq org-agenda-files `(,org-directory))
     (setq org-use-fast-todo-selection t)
     (setq org-treat-S-cursor-todo-selection-as-state-change nil)
-
-    (setq org-refile-targets '((nil :maxlevel . 9)
-                               (org-agenda-files :maxlevel . 9)))
-    (setq org-refile-use-outline-path 'file)
-    (setq org-outline-path-complete-in-steps nil)
 
     ;; Babel
     (setq org-babel-load-languages
@@ -975,21 +970,21 @@ commands).
     (setq org-babel-clojure-backend 'cider)
 
     (after-load 'ob-ditaa
-                (unless (and (boundp 'org-ditaa-jar-path)
-                             (file-exists-p org-ditaa-jar-path))
-                  (let ((jar-name "ditaa0_9.jar")
-                        (url "http://jaist.dl.sourceforge.net/project/ditaa/ditaa/0.9/ditaa0_9.zip"))
-                    (setq org-ditaa-jar-path (expand-file-name jar-name (file-name-directory user-init-file)))
-                    (unless (file-exists-p org-ditaa-jar-path)
-                      (sanityinc/grab-ditaa url jar-name)))))
+      (unless (and (boundp 'org-ditaa-jar-path)
+                   (file-exists-p org-ditaa-jar-path))
+        (let ((jar-name "ditaa0_9.jar")
+              (url "http://jaist.dl.sourceforge.net/project/ditaa/ditaa/0.9/ditaa0_9.zip"))
+          (setq org-ditaa-jar-path (expand-file-name jar-name (file-name-directory user-init-file)))
+          (unless (file-exists-p org-ditaa-jar-path)
+            (sanityinc/grab-ditaa url jar-name)))))
 
     (after-load 'ob-plantuml
-                (let ((jar-name "plantuml.jar")
-                      (url "http://jaist.dl.sourceforge.net/project/plantuml/plantuml.jar"))
-                  (setq org-plantuml-jar-path (expand-file-name jar-name (file-name-directory
-                                                                          user-init-file)))
-                  (unless (file-exists-p org-plantuml-jar-path)
-                    (url-copy-file url org-plantuml-jar-path))))
+      (let ((jar-name "plantuml.jar")
+            (url "http://jaist.dl.sourceforge.net/project/plantuml/plantuml.jar"))
+        (setq org-plantuml-jar-path (expand-file-name jar-name (file-name-directory
+                                                                user-init-file)))
+        (unless (file-exists-p org-plantuml-jar-path)
+          (url-copy-file url org-plantuml-jar-path))))
 
     (when (boundp 'org-plantuml-jar-path)
       (org-babel-do-load-languages
@@ -1026,6 +1021,48 @@ commands).
     (setq org-startup-align-all-tables t))
 #+end_src
 
+*** Todos
+#+begin_src emacs-lisp
+  (setq org-todo-keywords
+        '((sequence "TODO" "INPROGRESS" "BLOCKED" "REVIEW" "|" "DONE" "CANCELLED" "ARCHIVED")))
+
+  (setq org-todo-keyword-faces
+        '(("TODO" . org-warning)
+          ("INPROGRESS" . "yellow")
+          ("BLOCKED" . "red")
+          ("REVIEW" . "orange")
+          ("DONE" . "green")
+          ("CANCELLED" . "gray35")
+          ("ARCHIVED" . "blue")))
+#+end_src
+*** Agenda
+
+#+begin_src emacs-lisp
+  (setq org-agenda-files `(,org-directory))
+  (setq org-refile-targets '((nil :maxlevel . 9)
+                             (org-agenda-files :maxlevel . 9)))
+  (setq org-refile-use-outline-path 'file)
+  (setq org-outline-path-complete-in-steps nil)
+
+  (setq org-agenda-custom-commands
+        (quote (("c" todo "DONE|CANCELLED|ARCHIVED" nil)
+                ("b" todo "BLOCKED" nil)
+                ("p" "Today"
+                 ((agenda "plain"
+                          ((org-agenda-span 'day)))
+                  (tags-todo "+PRIORITY=\"A\""
+                             ((org-agenda-span 'day)
+                              (org-agenda-overriding-header
+                               "Priority tasks")))
+                  (alltodo ""
+                           ((org-agenda-skip-function
+                             '(org-agenda-skip-if nil '(scheduled deadline)))
+                            (org-agenda-overriding-header
+                             "Low priority tasks")))))
+                ("W" agenda "" ((org-agenda-ndays 21)))
+                )))
+
+#+end_src
 * MacOS specifics
 #+begin_src emacs-lisp
 (defcustom dotemacs-os/additional-exec-paths

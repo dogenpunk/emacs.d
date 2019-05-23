@@ -1444,15 +1444,73 @@ http://www.wangzerui.com/2017/02/20/setting-up-a-nice-environment-for-latex-on-m
 This needs some more massaging I think.
 
 #+begin_src emacs-lisp
-(when (or (executable-find "aspell")
-          (executable-find "ispell")
-          (executable-find "hunspell"))
-  (eval-when-compile (require 'cl))
-  (add-hook 'after-change-major-mode-hook
-            (lambda ()
-              (when (cl-find-if #'derived-mode-p '(text-mode org-mode))
-                (turn-on-flyspell)))))
+  (when (or (executable-find "aspell")
+            (executable-find "ispell")
+            (executable-find "hunspell"))
+    (eval-when-compile (require 'cl))
+    (add-hook 'after-change-major-mode-hook
+              (lambda ()
+                (when (cl-find-if #'derived-mode-p '(text-mode org-mode))
+                  (turn-on-flyspell)))))
 
+  (dolist (mode '(emacs-lisp-mode-hook
+                  inferior-lisp-mode-hook
+                  clojure-mode-hook))
+    (add-hook mode '(lambda ()
+                      (flyspell-prog-mode))))
+
+  (global-set-key (kbd "<f8>") 'ispell-word)
+  (defun /spell/flyspell-check-next-highlighted-word ()
+    "Custom function to spell check next highlighted word."
+    (interactive)
+    (flyspell-goto-next-error)
+    (ispell-word))
+  (global-set-key (kbd "M-<f8>") '/spell/flyspell-check-next-highlighted-word)
+
+  (when (executable-find "hunspell")
+    (setq-default ispell-program-name "hunspell")
+    (setq ispell-really-hunspell t))
+
+  (when (executable-find "aspell")
+    (setq-default ispell-program-name "aspell")
+    (setq ispell-really-aspell t))
+
+#+end_src
+
+*** Langtool
+
+#+begin_src emacs-lisp
+  (require-package 'langtool)
+
+
+  (defvar languagetool-download-dir (concat user-emacs-directory "downloads"))
+  (defvar languagetool-home-dir (file-name-as-directory (expand-file-name "LanguageTool" user-emacs-directory)))
+
+  (setq langtool-language-tool-jar (or (locate-file "languagetool-commandline.jar" languagetool-home-dir)
+                                       (expand-file-name "languagetool-commandline.jar" languagetool-home-dir))
+        langtool-mother-tongue "en")
+
+  (unless (file-exists-p langtool-language-tool-jar)
+    (url-copy-file
+     "https://www.languagetool.org/download/LanguageTool-stable.zip"
+     (expand-file-name "LanguageTool-stable.zip" languagetool-download-dir) t)
+
+    (require 'dired-aux)
+
+    (dired-compress-file (expand-file-name "LanguageTool-stable.zip" languagetool-download-dir))
+
+    (let* ((langtool-versioned-name (car (last
+                                          (directory-files (expand-file-name "LanguageTool-stable" languagetool-download-dir)))))
+           (langtool-dir-name (expand-file-name
+                               langtool-versioned-name
+                               (concat languagetool-download-dir "/LanguageTool-stable/")))
+           (langtool-dir (file-name-as-directory langtool-dir-name)))
+      (copy-directory
+       langtool-dir
+       (expand-file-name "LanguageTool" user-emacs-directory)
+       nil t t)
+      (delete-directory
+       (file-name-as-directory (expand-file-name "LanguageTool-stable" languagetool-download-dir)) t)))
 #+end_src
 
 * Prodigy (Manage external services)

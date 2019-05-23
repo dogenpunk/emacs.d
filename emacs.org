@@ -713,6 +713,13 @@ commands).
 (global-set-key (kbd "C-c e") 'dash-at-point-with-docset)
 #+end_src
 
+* Elfeed
+#+begin_src emacs-lisp
+  (require-package 'elfeed-org)
+
+  (elfeed-org)
+  (setq rmh-elfeed-org-files (list "~/.emacs.d/elfeed.org"))
+#+end_src
 * ERC
 #+begin_src emacs-lisp
   (require 'erc)

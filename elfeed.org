@@ -1,0 +1,7 @@
+* Blogs                                                              :elfeed:
+** Security
+*** https://blog.malwarebytes.com/feed/
+** Clojure
+*** http://planet.clojure.in/atom.xml
+** AWS
+*** https://www.lastweekinaws.com/feed/

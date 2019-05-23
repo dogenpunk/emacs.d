@@ -1088,6 +1088,10 @@ automated at some point. Bleh.
   (global-set-key (kbd "M-[") 'previous-buffer)
 #+end_src
 
+* PlantUML
+#+begin_src emacs-lisp
+  (require-package 'plantuml-mode)
+#+end_src
 * Org mode
 #+begin_src emacs-lisp
   (after 'org

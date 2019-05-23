@@ -1,0 +1,35 @@
+;;;; Emacs Bookmark Format Version 1 ;;;; -*- coding: utf-8-emacs -*- 
+;;; This format is meant to be slightly human-readable;
+;;; nevertheless, you probably don't want to edit it.
+;;; -*- End Of Bookmark File Format Version Stamp -*-
+(("FIPCO"
+ (filename . "~/Workspace/Clients/FIPCO/")
+ (front-context-string)
+ (rear-context-string . "28 May 16 16:51 ")
+ (position . 268))
+("VMS"
+ (filename . "~/Workspace/Clients/VMS/")
+ (front-context-string)
+ (rear-context-string . "24 May 14 21:26 ")
+ (position . 266))
+("Clients"
+ (filename . "~/Workspace/Clients/")
+ (front-context-string . "FIPCO\n  drwxr-xr")
+ (rear-context-string . "96 May 16 16:44 ")
+ (position . 262))
+("org-capture-last-stored-marker"
+ (filename . "~/org/clients/vms.org")
+ (front-context-string . "* TODO Register ")
+ (rear-context-string . "][VMS Meeting]]\n")
+ (position . 982))
+("org-capture-last-stored"
+ (filename . "~/org/inbox.org")
+ (front-context-string . "** TODO Register")
+ (rear-context-string . "][Prospecting]]\n")
+ (position . 429))
+("org-refile-last-stored"
+ (filename . "~/org/clients/vms.org")
+ (front-context-string . "* TODO Register ")
+ (rear-context-string . "][VMS Meeting]]\n")
+ (position . 982))
+)

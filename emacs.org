@@ -663,9 +663,9 @@ commands).
   (add-hook 'cider-mode-hook #'eldoc-mode)
   (add-hook 'cider-repl-mode-hook #'eldoc-mode)
   (add-hook 'cider-repl-mode-hook #'company-mode)
-  (add-hook 'cider-repl-mode-hook #'enable-paredit-mode)
+  (add-hook 'cider-repl-mode-hook #'smartparens-mode)
   (add-hook 'cider-mode-hook #'company-mode)
-  (add-hook 'cider-mode-hook #'enable-paredit-mode))
+  (add-hook 'cider-mode-hook #'smartparens-mode))
 #+end_src
 
 * Company
@@ -853,22 +853,22 @@ commands).
 * Lisp
 
 #+begin_src emacs-lisp
-(require-package 'elisp-slime-nav)
-(after 'elisp-slime-nav
-  (defadvice elisp-slime-nav-find-elisp-thing-at-point (after dotemacs activate)
-    (recenter)))
+  (require-package 'elisp-slime-nav)
+  (after 'elisp-slime-nav
+    (defadvice elisp-slime-nav-find-elisp-thing-at-point (after dotemacs activate)
+      (recenter)))
 
-(require-package 'paredit)
+  ;;(require-package 'paredit)
 
-(defun /lisp/major-mode-hook ()
-  (progn
-    (elisp-slime-nav-mode)
-    (eldoc-mode)
-    (paredit-mode t)))
+  (defun /lisp/major-mode-hook ()
+    (progn
+      (elisp-slime-nav-mode)
+      (eldoc-mode)
+      (smartparens-mode t)))
 
-(add-hook 'emacs-lisp-mode-hook #'/lisp/major-mode-hook)
-(add-hook 'lisp-interaction-mode-hook #'/lisp/major-mode-hook)
-(add-hook 'ielm-mode-hook #'/lisp/major-mode-hook)
+  (add-hook 'emacs-lisp-mode-hook #'/lisp/major-mode-hook)
+  (add-hook 'lisp-interaction-mode-hook #'/lisp/major-mode-hook)
+  (add-hook 'ielm-mode-hook #'/lisp/major-mode-hook)
 #+end_src
 
 * Misc
@@ -1090,21 +1090,21 @@ commands).
 
 * Smartparens
 #+begin_src emacs-lisp
-;;(require-package 'smartparens)
-;;(require 'smartparens-config)
+  (require-package 'smartparens)
+  (require 'smartparens-config)
 
-(electric-pair-mode -1)
+  (electric-pair-mode -1)
 
-;;(setq sp-autoinsert-quote-if-followed-by-closing-pair nil)
-;;(setq sp-autoinsert-pair t)
+  (setq sp-autoinsert-quote-if-followed-by-closing-pair nil)
+  (setq sp-autoinsert-pair t)
 
-;;(setq sp-show-pair-delay 0)
-;;(setq sp-show-pair-from-inside t)
+  (setq sp-show-pair-delay 0)
+  (setq sp-show-pair-from-inside t)
 
-;;(show-smartparens-global-mode t)
-;;(smartparens-global-mode t)
+  ;;(show-smartparens-global-mode t)
+  ;;(smartparens-global-mode t)
 
-;;(sp-use-smartparens-bindings)
+  (sp-use-smartparens-bindings)
 
 #+end_src
 

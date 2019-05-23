@@ -872,11 +872,12 @@ commands).
     (progn
       (elisp-slime-nav-mode)
       (eldoc-mode)
-      (smartparens-mode t)))
+      (smartparens-strict-mode t)))
 
   (add-hook 'emacs-lisp-mode-hook #'/lisp/major-mode-hook)
   (add-hook 'lisp-interaction-mode-hook #'/lisp/major-mode-hook)
   (add-hook 'ielm-mode-hook #'/lisp/major-mode-hook)
+
 #+end_src
 
 * Misc

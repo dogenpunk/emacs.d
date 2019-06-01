@@ -1393,8 +1393,6 @@ automated at some point. Bleh.
 #+END_SRC
 
 
-* MacOS specifics
-
 * LaTeX
 
 Cribbed from

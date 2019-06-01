@@ -588,6 +588,17 @@ be useful once I figure out how to fit it into my workflow.
   (global-set-key (kbd "<f3>") 'ftf-compile)
 #+end_src
 
+** Transposing things
+
+Cribbed from [[https://twitter.com/magnars][magnars']] [[https://github.com/magnars/.emacs.d][config]].
+
+#+begin_src emacs-lisp
+  (global-unset-key (kbd "M-t"))
+  (global-set-key (kbd "M-t w") 'transpose-words)
+  (global-set-key (kbd "M-t l") 'transpose-lines)
+  (global-set-key (kbd "M-t s") 'transpose-sexps)
+#+end_src
+
 ** Keying statistics
 
 Much like =find-things-fast=, this isn't something I've integrated yet.

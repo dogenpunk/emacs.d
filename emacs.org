@@ -325,10 +325,35 @@ to split it between the start and end of the file.
 
   ;; dired
   (after 'dired
-    (require 'dired-x))
+    (require 'dired-x)
+    (require 'dash))
+
+  (add-hook 'dired-mode-hook (lambda () (dired-hide-details-mode 1)))
 
   (setq insert-directory-program "gls")
   (setq dired-use-ls-dired t)
+  (setq dired-dwim-target t)
+  (--each '(dired-do-rename
+            dired-do-copy
+            dired-create-directory
+            wdired-abort-changes)
+    (eval `(defadvice ,it (after rever-buffer activate)
+             (revert-buffer))))
+
+  (defun dired-back-to-start-of-files ()
+    (interactive)
+    (backward-char (- (current-column) 2)))
+
+  (define-key dired-mode-map (kbd "C-a") 'dired-back-to-start-of-files)
+  (define-key dired-mode-map (kbd "k") 'dired-do-delete)
+  (define-key dired-mode-map (kbd "C-x C-k") 'dired-do-delete)
+
+  (eval-after-load "wdired"
+    '(progn
+       (define-key wdired-mode-map (kbd "C-a") 'dired-back-to-start-of-files)
+                                          ;(define-key wdired-mode-map (vector 'remap 'beginning-of-buffer) 'dired-back-to-top)
+                                          ;(define-key wdired-mode-map (vector 'remap 'end-of-buffer) 'dired-jump-to-bottom)
+       ))
 
   ;; comint
   (after 'comint

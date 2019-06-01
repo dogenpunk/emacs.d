@@ -457,7 +457,11 @@ to split it between the start and end of the file.
   (global-visual-line-mode)
   (which-function-mode t)
   (blink-cursor-mode -1)
-  (global-auto-revert-mode t)
+
+  (global-auto-revert-mode 1)
+  (setq global-auto-revert-non-file-buffers t)
+  (setq auto-revert-verbose nil)
+
   (electric-indent-mode t)
   (transient-mark-mode t)
   (delete-selection-mode t)

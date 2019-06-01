@@ -571,8 +571,9 @@ I find it's quicker and easier to use regexp-aware searches within a buffer.
     (move-end-of-line nil)
     (newline-and-indent))
 
-  (global-set-key (kbd "M-o") 'smart-open-line)
-  (global-set-key (kbd "M-O") 'smart-open-line-above)
+  (global-set-key (kbd "<C-return>") 'smart-open-line)
+  (global-set-key (kbd "<C-S-return>") 'smart-open-line-above)
+
 #+end_src
 
 ** Find things fast!!!
@@ -732,7 +733,9 @@ already narrowed."
     ;; Miscellaneous commands
     (define-key map (kbd "M-S") #'sp-split-sexp)
     (define-key map (kbd "M-J") #'sp-join-sexp)
-    (define-key map (kbd "C-M-t") #'sp-transpose-sexp))
+    (define-key map (kbd "C-M-t") #'sp-transpose-sexp)
+    (define-key map (kbd "M-S-i") #'sp-change-inner)
+    (define-key map (kbd "M-S-o") #'sp-change-enclosing))
 
   ;; Some additional bindings for strict mode
   (let ((map smartparens-strict-mode-map))

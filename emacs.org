@@ -1801,6 +1801,51 @@ soon, though.
     (eshell/mkdir "-p" dir)
     (eshell/cd dir))
 #+end_src
+
+* Writing
+
+*** Artbollocks
+#+begin_src emacs-lisp
+  (require-package 'artbollocks-mode)
+  (setq artbollocks-weasel-words-regex
+        (concat "\\b" (regexp-opt
+                       '("one of the"
+                         "should"
+                         "just"
+                         "sort of"
+                         "a lot"
+                         "probably"
+                         "maybe"
+                         "perhaps"
+                         "I think"
+                         "really"
+                         "pretty"
+                         "nice"
+                         "action"
+                         "utilize"
+                         "leverage") t) "\\b"))
+  (setq artbollocks-jargon nil)
+#+end_src
+
+*** Abbreviations
+
+Thanks to [[https://pages.sachachua.com/.emacs.d/Sacha.html][sachachua]] for the slick abbreviation table code!
+#+NAME: abbreviation-table
+| Base | Expansion   |
+|------+-------------|
+| bc   | because     |
+| wo   | without     |
+| wi   | with        |
+| ex   | For example |
+
+#+begin_src emacs-lisp :var data=abbreviation-table
+  (mapc (lambda (x) (define-global-abbrev (car x) (cadr x))) data)
+
+  (global-set-key (kbd "M-/") 'hippie-expand)
+  (add-hook 'text-mode-hook 'abbrev-mode)
+  (diminish 'abbrev-mode " A")
+#+end_src
+
 * File-local Variables
 # Local Variables:
 # eval: (add-hook 'after-save-hook (lambda () (org-babel-tangle)) nil t)

@@ -339,10 +339,35 @@ to split it between the start and end of the file.
 
   ;; dired
   (after 'dired
-    (require 'dired-x))
+    (require 'dired-x)
+    (require 'dash))
+
+  (add-hook 'dired-mode-hook (lambda () (dired-hide-details-mode 1)))
 
   (setq insert-directory-program "gls")
   (setq dired-use-ls-dired t)
+  (setq dired-dwim-target t)
+  (--each '(dired-do-rename
+            dired-do-copy
+            dired-create-directory
+            wdired-abort-changes)
+    (eval `(defadvice ,it (after rever-buffer activate)
+             (revert-buffer))))
+
+  (defun dired-back-to-start-of-files ()
+    (interactive)
+    (backward-char (- (current-column) 2)))
+
+  (define-key dired-mode-map (kbd "C-a") 'dired-back-to-start-of-files)
+  (define-key dired-mode-map (kbd "k") 'dired-do-delete)
+  (define-key dired-mode-map (kbd "C-x C-k") 'dired-do-delete)
+
+  (eval-after-load "wdired"
+    '(progn
+       (define-key wdired-mode-map (kbd "C-a") 'dired-back-to-start-of-files)
+                                          ;(define-key wdired-mode-map (vector 'remap 'beginning-of-buffer) 'dired-back-to-top)
+                                          ;(define-key wdired-mode-map (vector 'remap 'end-of-buffer) 'dired-jump-to-bottom)
+       ))
 
   ;; comint
   (after 'comint
@@ -446,7 +471,11 @@ to split it between the start and end of the file.
   (global-visual-line-mode)
   (which-function-mode t)
   (blink-cursor-mode -1)
-  (global-auto-revert-mode t)
+
+  (global-auto-revert-mode 1)
+  (setq global-auto-revert-non-file-buffers t)
+  (setq auto-revert-verbose nil)
+
   (electric-indent-mode t)
   (transient-mark-mode t)
   (delete-selection-mode t)
@@ -585,8 +614,9 @@ I find it's quicker and easier to use regexp-aware searches within a buffer.
     (move-end-of-line nil)
     (newline-and-indent))
 
-  (global-set-key (kbd "M-o") 'smart-open-line)
-  (global-set-key (kbd "M-O") 'smart-open-line-above)
+  (global-set-key (kbd "<C-return>") 'smart-open-line)
+  (global-set-key (kbd "<C-S-return>") 'smart-open-line-above)
+
 #+end_src
 
 ** Find things fast!!!
@@ -599,6 +629,17 @@ be useful once I figure out how to fit it into my workflow.
   (global-set-key (kbd "<f1>") 'ftf-find-file)
   (global-set-key (kbd "<f2>") 'ftf-grepsource)
   (global-set-key (kbd "<f3>") 'ftf-compile)
+#+end_src
+
+** Transposing things
+
+Cribbed from [[https://twitter.com/magnars][magnars']] [[https://github.com/magnars/.emacs.d][config]].
+
+#+begin_src emacs-lisp
+  (global-unset-key (kbd "M-t"))
+  (global-set-key (kbd "M-t w") 'transpose-words)
+  (global-set-key (kbd "M-t l") 'transpose-lines)
+  (global-set-key (kbd "M-t s") 'transpose-sexps)
 #+end_src
 
 ** Keying statistics
@@ -746,7 +787,9 @@ already narrowed."
     ;; Miscellaneous commands
     (define-key map (kbd "M-S") #'sp-split-sexp)
     (define-key map (kbd "M-J") #'sp-join-sexp)
-    (define-key map (kbd "C-M-t") #'sp-transpose-sexp))
+    (define-key map (kbd "C-M-t") #'sp-transpose-sexp)
+    (define-key map (kbd "M-S-i") #'sp-change-inner)
+    (define-key map (kbd "M-S-o") #'sp-change-enclosing))
 
   ;; Some additional bindings for strict mode
   (let ((map smartparens-strict-mode-map))
@@ -794,6 +837,13 @@ commands).
 #+begin_src emacs-lisp
   (require-package 'cider-eval-sexp-fu)
 
+  (require-package 'clj-refactor)
+  (setq cljr-thread-all-but-last t)
+  (cljr-add-keybindings-with-prefix "C-c r")
+  (define-key clj-refactor-map (kbd "C-c r t f") #'cljr-thread-first-all)
+  (define-key clj-refactor-map (kbd "C-c r t l") #'cljr-thread-last-all)
+  (define-key clj-refactor-map (kbd "C-c u") #'cljr-unwind)
+  (define-key clj-refactor-map (kbd "C-c U") #'cljr-unwind-all)
 #+end_src
 * Ruby
 #+begin_src emacs-lisp
@@ -1366,8 +1416,6 @@ automated at some point. Bleh.
 #+END_SRC
 
 
-* MacOS specifics
-
 * LaTeX
 
 Cribbed from
@@ -1776,6 +1824,51 @@ soon, though.
     (eshell/mkdir "-p" dir)
     (eshell/cd dir))
 #+end_src
+
+* Writing
+
+*** Artbollocks
+#+begin_src emacs-lisp
+  (require-package 'artbollocks-mode)
+  (setq artbollocks-weasel-words-regex
+        (concat "\\b" (regexp-opt
+                       '("one of the"
+                         "should"
+                         "just"
+                         "sort of"
+                         "a lot"
+                         "probably"
+                         "maybe"
+                         "perhaps"
+                         "I think"
+                         "really"
+                         "pretty"
+                         "nice"
+                         "action"
+                         "utilize"
+                         "leverage") t) "\\b"))
+  (setq artbollocks-jargon nil)
+#+end_src
+
+*** Abbreviations
+
+Thanks to [[https://pages.sachachua.com/.emacs.d/Sacha.html][sachachua]] for the slick abbreviation table code!
+#+NAME: abbreviation-table
+| Base | Expansion   |
+|------+-------------|
+| bc   | because     |
+| wo   | without     |
+| wi   | with        |
+| ex   | For example |
+
+#+begin_src emacs-lisp :var data=abbreviation-table
+  (mapc (lambda (x) (define-global-abbrev (car x) (cadr x))) data)
+
+  (global-set-key (kbd "M-/") 'hippie-expand)
+  (add-hook 'text-mode-hook 'abbrev-mode)
+  (diminish 'abbrev-mode " A")
+#+end_src
+
 * File-local Variables
 # Local Variables:
 # eval: (add-hook 'after-save-hook (lambda () (org-babel-tangle)) nil t)

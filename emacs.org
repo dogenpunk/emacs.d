@@ -699,7 +699,7 @@ already narrowed."
   (require 'smartparens-config)
 
   (defun /config/smartparens-enable-hook ()
-    (smartparens-mode)
+    (smartparens-strict-mode)
     (show-smartparens-mode)
     (electric-pair-mode -1))
 
@@ -776,6 +776,8 @@ commands).
   (add-hook 'clojure-mode-hook 'origami-mode)
   (add-hook 'clojure-mode-hook 'aggressive-indent-mode)
   (add-hook 'clojure-mode-hook #'smartparens-strict-mode)
+  (add-hook 'clojure-mode-hook #'subword-mode)
+
   (setq clojure-align-forms-automatically t)
 
   (after [cider]
@@ -783,7 +785,15 @@ commands).
     (add-hook 'cider-repl-mode-hook #'eldoc-mode)
     (add-hook 'cider-repl-mode-hook #'company-mode)
     (add-hook 'cider-mode-hook #'company-mode)
-    (add-hook 'cider-mode-hook #'smartparens-strict-mode))
+    (add-hook 'cider-mode-hook #'smartparens-strict-mode)
+    (add-hook 'cider-repl-mode-hook #'subword-mode))
+#+end_src
+
+*** Sexp-fu
+
+#+begin_src emacs-lisp
+  (require-package 'cider-eval-sexp-fu)
+
 #+end_src
 * Ruby
 #+begin_src emacs-lisp

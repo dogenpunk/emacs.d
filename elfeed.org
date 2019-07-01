@@ -5,3 +5,5 @@
 *** http://planet.clojure.in/atom.xml
 ** AWS
 *** https://www.lastweekinaws.com/feed/
+** Emacs
+*** https://planet.emacslife.com/atom.xml

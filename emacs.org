@@ -160,7 +160,21 @@ to split it between the start and end of the file.
   (display-time-mode t)
   (size-indication-mode t)
 
-  (set-frame-font "Anonymous Pro-10")
+  ;; (set-frame-font "Input-11")
+  ;; (set-frame-font "Anonymous-Pro-11")
+  ;; (set-frame-font "Fira Code Medium 12")
+
+  (defun my/font-exists-p (font)
+    "Checks if the named FONT exists on the current system."
+    (let ((spec (font-spec :name font)))
+      (find-font spec)))
+
+  (cond       ((my/font-exists-p "Hack") (set-frame-font "Hack 10" t t))
+              ((my/font-exists-p "Fira Code") (set-frame-font "Fira Code Medium 10" t t))
+              ((my/font-exists-p "Input") (set-frame-font "Input 10" t t))
+              ((my/font-exists-p "Source Code Pro") (set-frame-font "Source Code Pro Light 10" t t))
+              ((my/font-exists-p "Anonymous Pro") (set-frame-font "Anonymous Pro 10" t t)))
+
   (setq display-time-default-load-average nil)
 
   (require-package 'fill-column-indicator)

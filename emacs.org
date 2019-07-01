@@ -511,7 +511,7 @@ to split it between the start and end of the file.
 #+begin_src emacs-lisp
   (set-register ?i (cons 'file (expand-file-name "emacs.org" user-emacs-directory)))
   (my/defshortcut ?j "~/org/journal.org")
-  (my/defshortcut ?b "~/org/band.org")
+  (my/defshortcut ?b "~/org/blog.org")
   (my/defshortcut ?l "~/org/all-posts.org")
   (my/defshortcut ?s "~/org/school.org")
   (my/defshortcut ?g "~/org/goals.org")

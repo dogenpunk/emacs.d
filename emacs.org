@@ -897,8 +897,8 @@ automated at some point. Bleh.
 #+begin_src emacs-lisp
   (require-package 'company)
 
-  (setq company-idle-delay 0.3)
-  (setq company-minimum-prefix-length 1)
+  (setq company-idle-delay 0.1)
+  (setq company-minimum-prefix-length 2)
   (setq company-show-numbers t)
   (setq company-tooltip-limit 20)
 
@@ -907,6 +907,7 @@ automated at some point. Bleh.
 
   (setq company-dabbrev-code-everywhere t)
   (setq company-dabbrev-code-ignore-case t)
+  (setq company-dabbrev-code-other-buffers 'all)
 
   (setq company-etags-ignore-case t)
 

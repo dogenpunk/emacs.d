@@ -1088,6 +1088,11 @@ automated at some point. Bleh.
   (counsel-projectile-mode t)
   (ivy-mode t)
 
+  (define-key minibuffer-local-map
+    (kbd "C-r") 'counsel-minibuffer-history)
+  (define-key shell-mode-map
+    (kbd "C-r") 'counsel-shell-history)
+
 #+end_src
 
 * Lisp

@@ -1192,13 +1192,14 @@ automated at some point. Bleh.
 
     (setq org-default-notes-file (expand-file-name (concat org-directory "/inbox.org")))
     (setq org-todo-keywords
-          '((sequence "TODO" "INPROGRESS" "BLOCKED" "REVIEW" "|" "DONE" "ARCHIVED")))
+          '((sequence "TODO(t)" "INPROGRESS(p)" "BLOCKED(b)" "REVIEW(r)" "|" "DONE(d!)" "CANCELLED(c)" "ARCHIVED(a)")))
     (setq org-todo-keyword-faces
           '(("TODO" . org-warning)
             ("INPROGRESS" . "yellow")
             ("BLOCKED" . "red")
             ("REVIEW" . "orange")
             ("DONE" . "green")
+            ("CANCELLED" . "red")
             ("ARCHIVED" . "blue")))
     (setq org-log-done t)
     (setq org-log-into-drawer t)
@@ -1292,9 +1293,6 @@ automated at some point. Bleh.
 
 *** Todos
 #+begin_src emacs-lisp
-  (setq org-todo-keywords
-        '((sequence "TODO" "INPROGRESS" "BLOCKED" "REVIEW" "|" "DONE" "CANCELLED" "ARCHIVED")))
-
   (setq org-todo-keyword-faces
         '(("TODO" . org-warning)
           ("INPROGRESS" . "yellow")

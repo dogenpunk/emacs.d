@@ -982,6 +982,9 @@ automated at some point. Bleh.
 
     (setq erc-truncate-mode t)
 
+    (setq erc-autojoin-channels-alist '(("freenode.net" "#emacs" "#clojure")))
+    (setq erc-rename-buffer t)
+
     (add-hook 'window-configuration-change-hook
               (lambda ()
                 (setq erc-fill-column (- (window-width) 2)))))

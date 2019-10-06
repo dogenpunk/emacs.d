@@ -344,17 +344,18 @@ to split it between the start and end of the file.
     (require 'dired-x)
     (require 'dash))
 
+  (require 'dired)
   (add-hook 'dired-mode-hook (lambda () (dired-hide-details-mode 1)))
 
   (setq insert-directory-program "gls")
   (setq dired-use-ls-dired t)
   (setq dired-dwim-target t)
   (--each '(dired-do-rename
-            dired-do-copy
-            dired-create-directory
-            wdired-abort-changes)
+	    dired-do-copy
+	    dired-create-directory
+	    wdired-abort-changes)
     (eval `(defadvice ,it (after rever-buffer activate)
-             (revert-buffer))))
+	     (revert-buffer))))
 
   (defun dired-back-to-start-of-files ()
     (interactive)
@@ -367,8 +368,8 @@ to split it between the start and end of the file.
   (eval-after-load "wdired"
     '(progn
        (define-key wdired-mode-map (kbd "C-a") 'dired-back-to-start-of-files)
-                                          ;(define-key wdired-mode-map (vector 'remap 'beginning-of-buffer) 'dired-back-to-top)
-                                          ;(define-key wdired-mode-map (vector 'remap 'end-of-buffer) 'dired-jump-to-bottom)
+					  ;(define-key wdired-mode-map (vector 'remap 'beginning-of-buffer) 'dired-back-to-top)
+					  ;(define-key wdired-mode-map (vector 'remap 'end-of-buffer) 'dired-jump-to-bottom)
        ))
 
   ;; comint
@@ -376,18 +377,18 @@ to split it between the start and end of the file.
     (defun /core/toggle-comint-scroll-to-bottom-on-output ()
       (interactive)
       (if comint-scroll-to-bottom-on-output
-          (setq comint-scroll-to-bottom-on-output nil)
-        (setq comint-scroll-to-bottom-on-output t))))
+	  (setq comint-scroll-to-bottom-on-output nil)
+	(setq comint-scroll-to-bottom-on-output t))))
 
   ;; compile
   (setq compilation-always-kill t)
   (setq compilation-ask-about-save nil)
   (add-hook 'compilation-filter-hook
-            (lambda ()
-              (when (eq major-mode 'compilation-mode)
-                (require 'ansi-color)
-                (let ((inhibit-read-only t))
-                  (ansi-color-apply-on-region (point-min) (point-max))))))
+	    (lambda ()
+	      (when (eq major-mode 'compilation-mode)
+		(require 'ansi-color)
+		(let ((inhibit-read-only t))
+		  (ansi-color-apply-on-region (point-min) (point-max))))))
 
   ;; bookmarks
   (setq bookmark-default-file (concat user-emacs-directory "bookmarks"))
@@ -424,22 +425,22 @@ to split it between the start and end of the file.
 
   ;; scrolling
   (setq scroll-conservatively 9999
-        scroll-perserve-screen-position t
-        scroll-margin 3)
+	scroll-perserve-screen-position t
+	scroll-margin 3)
 
   ;; unique buffer names
   (require 'uniquify)
   (setq uniquify-buffer-name-style 'forward
-        uniquify-separator "/"
-        uniquify-ignore-buffers-re "^\\*"
-        uniquify-after-fill-buffer-p t)
+	uniquify-separator "/"
+	uniquify-ignore-buffers-re "^\\*"
+	uniquify-after-fill-buffer-p t)
 
   (defun /core/do-not-kill-scratch-buffer ()
     (if (member (buffer-name (current-buffer))
-                '("*scratch*" "*Messages*" "*Require Times*"))
-        (progn
-          (bury-buffer)
-          nil)
+		'("*scratch*" "*Messages*" "*Require Times*"))
+	(progn
+	  (bury-buffer)
+	  nil)
       t))
   (add-hook 'kill-buffer-query-functions '/core/do-not-kill-scratch-buffer)
 
@@ -987,32 +988,34 @@ automated at some point. Bleh.
 
 * Flycheck
 #+begin_src emacs-lisp
-(require-package 'flycheck)
+  (require-package 'flycheck)
 
-(setq flycheck-standard-error-navigation t)
-(setq-default flycheck-disabled-checkers '(emacs-lisp-checkdoc html-tidy))
+  (setq flycheck-standard-error-navigation t)
+  (setq-default flycheck-disabled-checkers '(emacs-lisp-checkdoc html-tidy))
 
-(add-hook 'after-init-hook #'global-flycheck-mode)
+  (add-hook 'after-init-hook #'global-flycheck-mode)
 
-(when (display-graphic-p)
-  (require-package 'flycheck-pos-tip)
-  (setq flycheck-pos-tip-timeout -1)
-  (flycheck-pos-tip-mode))
+  (when (display-graphic-p)
+    (require-package 'flycheck-pos-tip)
+    (setq flycheck-pos-tip-timeout -1)
+    (flycheck-pos-tip-mode))
 
-(defun /flycheck/advice/next-error-find-buffer (orig-func &rest args)
-  (let* ((special-buffers
-          (cl-loop for buffer in (mapcar #'window-buffer (window-list))
-                   when (with-current-buffer buffer
-                          (and
-                           (eq (get major-mode 'mode-class) 'special)
-                           (boundp 'next-error-function)))
-                   collect buffer))
-         (first-special-buffer (car special-buffers)))
-    (if first-special-buffer
-        first-special-buffer
-      (apply orig-func args))))
+  (defun /flycheck/advice/next-error-find-buffer (orig-func &rest args)
+    (let* ((special-buffers
+            (cl-loop for buffer in (mapcar #'window-buffer (window-list))
+                     when (with-current-buffer buffer
+                            (and
+                             (eq (get major-mode 'mode-class) 'special)
+                             (boundp 'next-error-function)))
+                     collect buffer))
+           (first-special-buffer (car special-buffers)))
+      (if first-special-buffer
+          first-special-buffer
+        (apply orig-func args))))
 
-(advice-add #'next-error-find-buffer :around #'/flycheck/advice/next-error-find-buffer)
+  (advice-add #'next-error-find-buffer :around #'/flycheck/advice/next-error-find-buffer)
+
+  (require-package 'flycheck-clj-kondo)
 
 #+end_src
 
@@ -1369,34 +1372,34 @@ automated at some point. Bleh.
                             (org-agenda-overriding-header
                              "Low priority tasks")))))
                 ("W" agenda "" ((org-agenda-ndays 21)))
-("d" "Daily agenda and all TODOs"
-           ((tags "PRIORITY=\"A\""
-                  ((org-agenda-skip-function '(org-agenda-skip-entry-if 'todo 'done))
-                   (org-agenda-overriding-header "High-priority unfinished tasks:")))
-            (agenda "" ((org-agenda-ndays 1)))
-            (alltodo ""
-                     ((org-agenda-skip-function '(or (/agenda/org-skip-subtree-if-habit)
-                                                     (/agenda/org-skip-subtree-if-priority ?A)
-                                                     (org-agenda-skip-if nil '(scheduled deadline))))
-                      (org-agenda-overriding-header "ALL normal priority tasks:"))))
-           ((org-agenda-compact-blocks t)))
+                ("d" "Daily agenda and all TODOs"
+                 ((tags "PRIORITY=\"A\""
+                        ((org-agenda-skip-function '(org-agenda-skip-entry-if 'todo 'done))
+                         (org-agenda-overriding-header "High-priority unfinished tasks:")))
+                  (agenda "" ((org-agenda-ndays 1)))
+                  (alltodo ""
+                           ((org-agenda-skip-function '(or (/agenda/org-skip-subtree-if-habit)
+                                                           (/agenda/org-skip-subtree-if-priority ?A)
+                                                           (org-agenda-skip-if nil '(scheduled deadline))))
+                            (org-agenda-overriding-header "ALL normal priority tasks:"))))
+                 ((org-agenda-compact-blocks t)))
 
-("h" "Habits" tags-todo "STYLE=\"habit\""
-           ((org-agenda-overriding-header "Habits")
-            (org-agenda-sorting-strategy
-             '(todo-state-down effort-up category-keep))))
+                ("h" "Habits" tags-todo "STYLE=\"habit\""
+                 ((org-agenda-overriding-header "Habits")
+                  (org-agenda-sorting-strategy
+                   '(todo-state-down effort-up category-keep))))
 
-(" " "Agenda"
-           ((agenda "" nil)
-            (tags "REFILE"
-                  ((org-agenda-overriding-header "Tasks to Refile")
-                   (org-tags-match-list-sublevels nil)))
+                (" " "Agenda"
+                 ((agenda "" nil)
+                  (tags "REFILE"
+                        ((org-agenda-overriding-header "Tasks to Refile")
+                         (org-tags-match-list-sublevels nil)))
 
-            (tags-todo "-CANCELLED/!"
-                       ((org-agenda-overriding-header "Stuck Projects")
-                        (org-agenda-skip-function '/agenda/skip-non-stuck-projects)
-                        (org-agenda-sorting-strategy '(category-keep))))
-            ))
+                  (tags-todo "-CANCELLED/!"
+                             ((org-agenda-overriding-header "Stuck Projects")
+                              (org-agenda-skip-function '/agenda/skip-non-stuck-projects)
+                              (org-agenda-sorting-strategy '(category-keep))))
+                  ))
                 )))
 
 #+end_src
@@ -1727,52 +1730,52 @@ This isn't working currently.
 
 * VCS
 #+begin_src emacs-lisp
-(setq vc-make-backup-files t)
+  (setq vc-make-backup-files t)
 
-(when (executable-find "git")
-  (require-package 'magit)
-  (require-package 'forge)
+  (when (executable-find "git")
+    (require-package 'magit)
+    (require-package 'forge)
 
-  (defun /vcs/magit-post-display-buffer-hook ()
-    (if (string-match "*magit:" (buffer-name))
-        (delete-other-windows)))
-  (add-hook 'magit-post-display-buffer-hook #'/vcs/magit-post-display-buffer-hook)
+    (defun /vcs/magit-post-display-buffer-hook ()
+      (if (string-match "*magit:" (buffer-name))
+          (delete-other-windows)))
+    (add-hook 'magit-post-display-buffer-hook #'/vcs/magit-post-display-buffer-hook)
 
-  (setq magit-section-show-child-count t)
-  (setq magit-diff-arguments '("--histogram"))
-  (setq magit-ediff-dwim-show-on-hunks t)
-  (setq magit-display-buffer-function #'magit-display-buffer-fullcolumn-most-v1)
+    (setq magit-section-show-child-count t)
+    (setq magit-diff-arguments '("--histogram"))
+    (setq magit-ediff-dwim-show-on-hunks t)
+    (setq magit-display-buffer-function #'magit-display-buffer-fullcolumn-most-v1)
 
-  (after 'eshell
-    (require-package 'pcmpl-git)
-    (require 'pcmpl-git))
+    (after 'eshell
+      (require-package 'pcmpl-git)
+      (require 'pcmpl-git))
 
-  (if (display-graphic-p)
-      (progn
-        (require-package 'git-gutter-fringe+)
-        (require 'git-gutter-fringe+))
-    (require-package 'git-gutter+))
-  (global-git-gutter+-mode))
+    (if (display-graphic-p)
+        (progn
+          (require-package 'git-gutter-fringe+)
+          (require 'git-gutter-fringe+))
+      (require-package 'git-gutter+))
+    (global-git-gutter+-mode))
 
-(require-package 'diff-hl)
-(add-hook 'dired-mode-hook 'diff-hl-dired-mode)
-(unless (display-graphic-p)
-  (diff-hl-margin-mode))
-(if (package-installed-p 'magit)
-    (add-hook 'magit-post-refresh-hook #'diff-hl-magit-post-refresh))
+  (require-package 'diff-hl)
+  (add-hook 'dired-mode-hook 'diff-hl-dired-mode)
+  (diff-hl-margin-mode t)
 
-(require-package 'with-editor)
-(autoload 'with-editor-export-editor "with-editor")
-(defun /vcs/with-editor-export ()
-  (unless (equal (buffer-name) "*fzf*")
-    (with-editor-export-editor)
-    (message "")))
-(add-hook 'shell-mode-hook #'/vcs/with-editor-export)
-(add-hook 'term-exec-hook #'/vcs/with-editor-export)
-(add-hook 'eshell-mode-hook #'/vcs/with-editor-export)
+  (if (package-installed-p 'magit)
+      (add-hook 'magit-post-refresh-hook #'diff-hl-magit-post-refresh))
 
-(/boot/lazy-major-mode "^\\.gitignore$" gitignore-mode)
-(/boot/lazy-major-mode "^\\.gitattributes$" gitattributes-mode)
+  (require-package 'with-editor)
+  (autoload 'with-editor-export-editor "with-editor")
+  (defun /vcs/with-editor-export ()
+    (unless (equal (buffer-name) "*fzf*")
+      (with-editor-export-editor)
+      (message "")))
+  (add-hook 'shell-mode-hook #'/vcs/with-editor-export)
+  (add-hook 'term-exec-hook #'/vcs/with-editor-export)
+  (add-hook 'eshell-mode-hook #'/vcs/with-editor-export)
+
+  (/boot/lazy-major-mode "^\\.gitignore$" gitignore-mode)
+  (/boot/lazy-major-mode "^\\.gitattributes$" gitattributes-mode)
 
 #+end_src
 

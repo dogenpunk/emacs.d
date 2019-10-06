@@ -1365,7 +1365,7 @@ automated at some point. Bleh.
           next-headline))))
 
   (setq org-agenda-custom-commands
-        (quote (("c" todo "DONE|CANCELLED|ARCHIVED" nil)
+        (quote (("c" "DONE|CANCELLED|ARCHIVED" nil)
                 ("b" todo "BLOCKED" nil)
                 ("p" "Today"
                  ((agenda "plain"
